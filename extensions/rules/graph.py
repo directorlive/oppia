@@ -18,6 +18,7 @@
 
 __author__ = 'Zhan Xiong Chin'
 
+from core.domain import rule_domain
 from extensions.rules import base
 import itertools
 
@@ -27,7 +28,7 @@ class IsIsomorphicTo(base.GraphRule):
 
     def _evaluate(self, subject):
         if len(subject['vertices']) != len(self.g['vertices']):
-            return False
+            return rule_domain.CERTAIN_FALSE_VALUE
 
         # Construct adjacency matrices
         def construct_adjacency_matrix(graph):
@@ -62,5 +63,5 @@ class IsIsomorphicTo(base.GraphRule):
                 if not found_isomorphism:
                     break
             if found_isomorphism:
-                return True
-        return False
+                return rule_domain.CERTAIN_TRUE_VALUE
+        return rule_domain.CERTAIN_FALSE_VALUE

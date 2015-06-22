@@ -42,11 +42,12 @@ class Within(base.CoordTwoDimRule):
         actual_distance = (
             RADIUS_OF_EARTH * 2 *
             math.asin(math.sqrt(haversine_of_central_angle)))
-        return actual_distance < self.d
+        return self._fuzzify_truth_value(actual_distance < self.d)
 
 
 class NotWithin(base.CoordTwoDimRule):
     description = 'is not within {{d|Real}} km of {{p|CoordTwoDim}}'
 
     def _evaluate(self, subject):
-        return not Within(self.d, self.p)._evaluate(subject)
+        return self._invert_fuzzy_truth_value(
+            Within(self.d, self.p)._evaluate(subject))

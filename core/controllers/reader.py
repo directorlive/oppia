@@ -90,6 +90,9 @@ def require_playable(handler):
     return test_can_play
 
 
+# TODO(bhenning): Add more tests for classification, such as testing multiple
+# rule specs over multiple answer groups and making sure the best match over all
+# those rules is picked.
 def classify(exp_id, state, answer, params):
     """Normalize the answer and classify it among the answer groups of the given
     state. Returns a dict with the following keys:
@@ -103,27 +106,42 @@ def classify(exp_id, state, answer, params):
         state.interaction.id)
     normalized_answer = interaction_instance.normalize_answer(answer)
 
-    # Find the first group that satisfactorily matches the given answer.
+    # Find the first group that satisfactorily matches the given answer. This is
+    # done by ORing (maximizing) all truth values of all rules over all answer
+    # groups. The group with the highest truth value is considered the best
+    # match.
+    best_matched_answer_group = None
+    best_matched_rule_spec = None
+    best_matched_truth_value = 0.0
     for answer_group in state.interaction.answer_groups:
         fs = fs_domain.AbstractFileSystem(
             fs_domain.ExplorationFileSystem(exp_id))
         input_type = interaction_instance.get_submit_handler().obj_type
-        matched_rule_spec = None
+        ored_truth_value = 0.0
+        best_rule_spec = None
         for rule_spec in answer_group.rule_specs:
-            if rule_domain.evaluate_rule(
-                    rule_spec, input_type, params, normalized_answer, fs):
-                matched_rule_spec = rule_spec
-                break
-        if matched_rule_spec is not None:
-            return {
-                'outcome': answer_group.outcome.to_dict(),
-                'rule_spec_string': (
-                    matched_rule_spec.stringify_classified_rule())
-            }
+            evaluated_truth_value = rule_domain.evaluate_rule(
+                rule_spec, input_type, params, normalized_answer, fs)
+            if evaluated_truth_value > ored_truth_value:
+                ored_truth_value = evaluated_truth_value
+                best_rule_spec = rule_spec
+        if ored_truth_value > best_matched_truth_value:
+            best_matched_truth_value = ored_truth_value
+            best_matched_rule_spec = best_rule_spec
+            best_matched_answer_group = answer_group
 
-    # If no other groups match, then the default group automatically matches
-    # (if there is one present).
-    if state.interaction.default_outcome is not None:
+    # The best matched group must match above a certain threshold. No group
+    # meets this requirement, then the default 'group' automatically matches
+    # (if there is one present), resulting in the outcome of the answer being
+    # the default outcome of the state.
+    if (best_matched_truth_value >=
+            feconf.DEFAULT_ANSWER_GROUP_CLASSIFICATION_THRESHOLD):
+        return {
+            'outcome': best_matched_answer_group.outcome.to_dict(),
+            'rule_spec_string': (
+                best_matched_rule_spec.stringify_classified_rule())
+        }
+    elif state.interaction.default_outcome is not None:
         return {
             'outcome': state.interaction.default_outcome.to_dict(),
             'rule_spec_string': exp_domain.DEFAULT_RULESPEC_STR

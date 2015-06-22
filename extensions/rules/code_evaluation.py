@@ -28,7 +28,8 @@ class OutputEquals(base.CodeEvaluationRule):
     def _evaluate(self, subject):
         normalized_result = ' '.join(subject['output'].split())
         normalized_expected_output = ' '.join(self.x.split())
-        return normalized_result == normalized_expected_output
+        return self._fuzzify_truth_value(
+            normalized_result == normalized_expected_output)
 
 
 class ResultsInError(base.CodeEvaluationRule):
@@ -36,4 +37,4 @@ class ResultsInError(base.CodeEvaluationRule):
 
     def _evaluate(self, subject):
         error = subject['error'].strip()
-        return bool(error)
+        return self._fuzzify_truth_value(error)
