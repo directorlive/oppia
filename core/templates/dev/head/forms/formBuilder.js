@@ -494,6 +494,7 @@ oppia.filter('sanitizeHtmlForRte', ['$sanitize', function($sanitize) {
   var _EXTENSION_SELECTOR = '[class^=oppia-noninteractive-]';
 
   return function(html) {
+    console.log('sanitize');
     var wrapper = document.createElement('div');
     wrapper.innerHTML = html;
 
@@ -814,8 +815,15 @@ oppia.directive('textAngularRte', [
       };
 
       $scope.stripFormatting = function(html) {
-        return $filter('sanitizeHtmlForRte')(html);
+        //return $filter('sanitizeHtmlForRte')(html);
+        return html;
       };
+
+      $scope.$on('stateEditorSaved', function() {
+        console.log('receiving');
+        $scope.htmlContent = $filter('sanitizeHtmlForRte')($scope.htmlContent);
+        console.log('changed');
+      });
 
       $scope.init = function() {
         $scope.tempContent = _convertHtmlToRte($scope.htmlContent);

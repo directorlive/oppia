@@ -77,6 +77,9 @@ oppia.controller('StateEditor', [
   };
 
   $scope.saveTextContent = function() {
+    console.log('sending');
+    $rootScope.$broadcast('stateEditorSaved');
+    console.log('saving');
     if ($scope.contentMemento !== null && !angular.equals($scope.contentMemento, $scope.content)) {
       changeListService.editStateProperty(
         editorContextService.getActiveStateName(), 'content',
