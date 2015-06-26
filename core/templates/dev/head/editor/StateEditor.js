@@ -19,11 +19,11 @@
  */
 
 oppia.controller('StateEditor', [
-  '$scope', '$rootScope', 'editorContextService', 'changeListService',
+  '$scope', '$rootScope', '$timeout', 'editorContextService', 'changeListService',
   'editabilityService', 'explorationStatesService', 'stateInteractionIdService',
   'INTERACTION_SPECS',
   function(
-    $scope, $rootScope, editorContextService, changeListService,
+    $scope, $rootScope, $timeout, editorContextService, changeListService,
     editabilityService, explorationStatesService, stateInteractionIdService,
     INTERACTION_SPECS) {
 
@@ -77,21 +77,21 @@ oppia.controller('StateEditor', [
   };
 
   $scope.saveTextContent = function() {
-    console.log('sending');
-    $rootScope.$broadcast('stateEditorSaved');
-    console.log('saving');
-    if ($scope.contentMemento !== null && !angular.equals($scope.contentMemento, $scope.content)) {
-      changeListService.editStateProperty(
-        editorContextService.getActiveStateName(), 'content',
-        angular.copy($scope.content), angular.copy($scope.contentMemento));
+    $rootScope.$broadcast('editorSave');
+    $timeout(function() {
+      if ($scope.contentMemento !== null && !angular.equals($scope.contentMemento, $scope.content)) {
+        changeListService.editStateProperty(
+          editorContextService.getActiveStateName(), 'content',
+          angular.copy($scope.content), angular.copy($scope.contentMemento));
 
-      var _stateData = explorationStatesService.getState(
-        editorContextService.getActiveStateName());
-      _stateData.content = angular.copy($scope.content);
-      explorationStatesService.setState(
-        editorContextService.getActiveStateName(), _stateData);
-    }
-    $scope.contentMemento = null;
+        var _stateData = explorationStatesService.getState(
+          editorContextService.getActiveStateName());
+        _stateData.content = angular.copy($scope.content);
+        explorationStatesService.setState(
+          editorContextService.getActiveStateName(), _stateData);
+      }
+      $scope.contentMemento = null;
+    }, 20);
   };
 
   $scope.$on('externalSave', function() {
