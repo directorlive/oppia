@@ -123,11 +123,11 @@ oppia.directive('ruleEditor', ['$log', function($log) {
         $scope.answerChoices = rulesService.getAnswerChoices();
         $scope.currentInteractionId = stateInteractionIdService.savedMemento;
 
-        $scope.resetMementos = function() {
+        var resetMementos = function() {
           $scope.ruleTypeMemento = null;
           $scope.ruleInputsMemento = null;
         };
-        $scope.resetMementos();
+        resetMementos();
 
         $scope.ruleEditorIsOpen = false;
         $scope.openRuleEditor = function() {

@@ -22,42 +22,47 @@ oppia.filter('oppiaInteractiveImageClickInputValidator', [
     function($filter, WARNING_TYPES, baseInteractionValidationService) {
   // Returns a list of warnings.
   return function(stateName, customizationArgs, answerGroups, defaultOutcome) {
-    var warningsList = [];
+    var warningsList = (
+      baseInteractionValidationService.validateCustomizationArguments(
+        customizationArgs, [
+        'imageAndRegions.value.imagePath',
+        'imageAndRegions.value.labeledRegions']));
 
-    if (!customizationArgs.imageAndRegions.value.imagePath) {
-      warningsList.push({
-        type: WARNING_TYPES.CRITICAL,
-        message: 'please add an image for the learner to click on.'
-      });
-    }
-
-    if (customizationArgs.imageAndRegions.value.labeledRegions.length === 0) {
-      warningsList.push({
-        type: WARNING_TYPES.ERROR,
-        message: 'please specify at least one image region to click on.'
-      });
-    }
-
-    var areAnyRegionStringsEmpty = false;
-    var areAnyRegionStringsDuplicated = false;
-    var seenRegionStrings = [];
-    for (var i = 0; i < customizationArgs.imageAndRegions.value.labeledRegions.length; i++) {
-      var regionLabel = customizationArgs.imageAndRegions.value.labeledRegions[i].label;
-
-      if (regionLabel.trim().length === 0) {
-        areAnyRegionStringsEmpty = true;
-      }
-      var ALPHANUMERIC_REGEX = /^[A-Za-z0-9]+$/;
-      if (!ALPHANUMERIC_REGEX.test(regionLabel)) {
+    if (warningsList.length == 0) {
+      if (!customizationArgs.imageAndRegions.value.imagePath) {
         warningsList.push({
           type: WARNING_TYPES.CRITICAL,
-          message: 'the image region strings should consist of characters from [A-Za-z0-9].'
+          message: 'please add an image for the learner to click on.'
         });
       }
-      if (seenRegionStrings.indexOf(regionLabel) !== -1) {
-        areAnyRegionStringsDuplicated = true;
+
+      var areAnyRegionStringsEmpty = false;
+      var areAnyRegionStringsDuplicated = false;
+      var seenRegionStrings = [];
+      if (customizationArgs.imageAndRegions.value.labeledRegions.length === 0) {
+        warningsList.push({
+          type: WARNING_TYPES.ERROR,
+          message: 'please specify at least one image region to click on.'
+        });
       }
-      seenRegionStrings.push(regionLabel);
+
+      for (var i = 0; i < customizationArgs.imageAndRegions.value.labeledRegions.length; i++) {
+        var regionLabel = customizationArgs.imageAndRegions.value.labeledRegions[i].label;
+
+        var ALPHANUMERIC_REGEX = /^[A-Za-z0-9]+$/;
+        if (regionLabel.trim().length === 0) {
+          areAnyRegionStringsEmpty = true;
+        } else if (!ALPHANUMERIC_REGEX.test(regionLabel)) {
+          warningsList.push({
+            type: WARNING_TYPES.CRITICAL,
+            message: 'the image region strings should consist of characters from [A-Za-z0-9].'
+          });
+        } else if (seenRegionStrings.indexOf(regionLabel) !== -1) {
+          areAnyRegionStringsDuplicated = true;
+        } else {
+          seenRegionStrings.push(regionLabel);
+        }
+      }
     }
 
     if (areAnyRegionStringsEmpty) {
@@ -74,8 +79,8 @@ oppia.filter('oppiaInteractiveImageClickInputValidator', [
     }
 
     warningsList = warningsList.concat(
-      baseInteractionValidationService.getNonDefaultRuleSpecsWarnings(
-        answerGroups, defaultOutcome, stateName));
+      baseInteractionValidationService.getAnswerGroupWarnings(
+        answerGroups, stateName));
 
     // Check that each rule refers to a valid region string.
     for (var i = 0; i < answerGroups.length; i++) {
@@ -87,7 +92,8 @@ oppia.filter('oppiaInteractiveImageClickInputValidator', [
             warningsList.push({
             type: WARNING_TYPES.CRITICAL,
             message: (
-              'the region label \'' + label + '\' in rule ' + String(i + 1) + ' is invalid.')
+              'the region label \'' + label + '\' in rule ' + String(j + 1) +
+              ' in group ' + String(i + 1) + ' is invalid.')
             });
           }
         }

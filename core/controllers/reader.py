@@ -95,7 +95,7 @@ def classify(exp_id, state, answer, params):
     which the answer best belongs. The best group is decided by finding the
     first rule best satisfied by the answer. Returns a dict with the following
     keys:
-        'outcome': The Outcome of the answer group matched.
+        'outcome': A dict representing the outcome of the answer group matched.
         'rule_spec_string': A descriptive string representation of the rule
             matched.
     When the default rule is matched, outcome is the default_outcome of the
@@ -332,7 +332,7 @@ class ClassifyHandler(base.BaseHandler):
     """Stateless handler that performs a classify() operation server-side and
     returns the corresponding classification result, which is a dict containing
     two keys:
-        'outcome': The Outcome of the answer group matched.
+        'outcome': A dict representing the outcome of the answer group matched.
         'rule_spec_string': A descriptive string representation of the rule
             matched.
     """

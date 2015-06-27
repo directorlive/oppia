@@ -31,7 +31,7 @@
               <img src="/third_party/static/material-design-icons-1.0.1/ic_close_black_48dp.png" class="protractor-test-delete-response oppia-delete-response-button oppia-transition-200" ng-click="deleteGroup($index)"></img>
             </a>
 
-            <div ng-if="activeGroupIndex === $index && isActiveRuleEditorShown">
+            <div ng-if="activeGroupIndex === $index">
               <div class="oppia-editor-card-section">
                 <div class="oppia-rule-body-container">
                   <group-editor rules="group.rule_specs" outcome="group.outcome" is-default-rule="false" save-rule="saveActiveGroup(group.rule_specs, group.outcome)" is-editable="editabilityService.isEditable()" class="protractor-test-rule-body">
@@ -63,7 +63,7 @@
               </span>
             </a>
 
-            <div ng-if="activeGroupIndex === answerGroups.length && isActiveRuleEditorShown">
+            <div ng-if="activeGroupIndex === answerGroups.length">
               <div class="oppia-editor-card-section">
                 <div class="oppia-rule-body-container">
                   <group-editor rule="null" outcome="defaultOutcome" is-default-rule="true" save-rule="saveDefaultOutcome(defaultOutcome)" is-editable="editabilityService.isEditable()" class="protractor-test-rule-body">

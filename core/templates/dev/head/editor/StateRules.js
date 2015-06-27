@@ -55,6 +55,9 @@ oppia.factory('rulesService', [
 
   var _answerGroupsMemento = null;
   var _defaultOutcomeMemento = null;
+  // Represents the current selected answer group, starting at index 0. If the
+  // index equal to the number of answer groups (answerGroups.length), then it
+  // is referring to the default outcome.
   var _activeGroupIndex = null;
   var _activeRuleIndex = null;
   var _answerGroups = null;
@@ -161,13 +164,6 @@ oppia.factory('rulesService', [
     },
     getAnswerChoices: function() {
       return angular.copy(_answerChoices);
-    },
-    getActiveRule: function() {
-      if (_answerGroups) {
-        return _answerGroups[_activeGroupIndex];
-      } else {
-        return null;
-      }
     },
     deleteGroup: function(index) {
       if (!window.confirm('Are you sure you want to delete this response?')) {
@@ -363,14 +359,6 @@ oppia.controller('StateRules', [
       $scope.changeActiveGroupIndex(ui.item.index());
       $rootScope.$broadcast('externalSave');
     }
-  };
-
-  $scope.isActiveRuleEditorShown = function() {
-    var activeRule = rulesService.getActiveRule();
-    return activeRule && stateInteractionIdService.savedMemento && (
-      activeRule.definition.rule_type !== 'default' ||
-      activeRule.dest !== editorContextService.getActiveStateName() ||
-      activeRule.feedback.length > 0);
   };
 
   $scope.deleteGroup = function(index) {
