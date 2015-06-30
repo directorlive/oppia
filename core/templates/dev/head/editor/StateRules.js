@@ -126,12 +126,21 @@ oppia.factory('rulesService', [
       if (answerGroupsCache.contains(newInteractionId)) {
         _answerGroups = answerGroupsCache.get(newInteractionId);
       } else {
-        // Preserve just the default rule by retaining the default outcome,
-        // unless the new interaction id is a terminal one (in which case,
-        // remove the default outcome).
+        // Preserve the default outcome unless the interaction is terminal.
+        // Recreate the default outcome if switching away from a terminal
+        // interaction.
         _answerGroups = [];
-        if (newInteractionId && INTERACTION_SPECS[newInteractionId].is_terminal) {
-          _defaultOutcome = null;
+        if (newInteractionId) {
+          if (INTERACTION_SPECS[newInteractionId].is_terminal) {
+            _defaultOutcome = null;
+          } else if (!_defaultOutcome) {
+            // TODO(bhenning): This code should ideally not be coupled with the
+            // states schema structure of an outcome.
+            _defaultOutcome = {
+              'feedback': [],
+              'dest': editorContextService.getActiveStateName()
+            };
+          }
         }
       }
 
@@ -212,11 +221,6 @@ oppia.controller('StateRules', [
     function(
       $scope, $rootScope, $modal, stateInteractionIdService,
       editorContextService, warningsData, rulesService, routerService) {
-  $scope.answerChoices = null;
-
-  $scope.getAnswerChoices = function() {
-    return rulesService.getAnswerChoices();
-  };
   $scope.editorContextService = editorContextService;
 
   $scope.changeActiveGroupIndex = function(newIndex) {
@@ -241,7 +245,6 @@ oppia.controller('StateRules', [
     $scope.answerGroups = rulesService.getAnswerGroups();
     $scope.defaultOutcome = rulesService.getDefaultOutcome();
     $scope.activeGroupIndex = rulesService.getActiveGroupIndex();
-    $scope.answerChoices = $scope.getAnswerChoices();
     $rootScope.$broadcast('externalSave');
   });
 
@@ -251,29 +254,19 @@ oppia.controller('StateRules', [
       $scope.answerGroups = rulesService.getAnswerGroups();
       $scope.defaultOutcome = rulesService.getDefaultOutcome();
       $scope.activeGroupIndex = rulesService.getActiveGroupIndex();
-      $scope.answerChoices = $scope.getAnswerChoices();
     });
   });
 
-  $scope.$on('ruleDeleted', function(evt) {
+  $scope.$on('groupDeleted', function(evt) {
     $scope.answerGroups = rulesService.getAnswerGroups();
     $scope.defaultOutcome = rulesService.getDefaultOutcome();
     $scope.activeGroupIndex = rulesService.getActiveGroupIndex();
   });
 
-  $scope.$on('ruleSaved', function(evt) {
+  $scope.$on('groupSaved', function(evt) {
     $scope.answerGroups = rulesService.getAnswerGroups();
     $scope.defaultOutcome = rulesService.getDefaultOutcome();
     $scope.activeGroupIndex = rulesService.getActiveGroupIndex();
-  });
-
-  // Updates answer choices when the interaction requires it -- for example,
-  // the rules for multiple choice need to refer to the multiple choice
-  // interaction's customization arguments.
-  // TODO(sll): Remove the need for this watcher, or make it less ad hoc.
-  $scope.$on('updateAnswerChoices', function(evt, newAnswerChoices) {
-    rulesService.updateAnswerChoices(newAnswerChoices);
-    $scope.answerChoices = $scope.getAnswerChoices();
   });
 
   $scope.openAddRuleModal = function() {
@@ -295,7 +288,6 @@ oppia.controller('StateRules', [
           feedback: [''],
           param_changes: []
         };
-        $scope.isDefaultRule = false;
 
         $scope.isSelfLoopWithNoFeedback = function(tmpOutcome) {
           var hasFeedback = false;
@@ -312,7 +304,6 @@ oppia.controller('StateRules', [
         };
 
         $scope.addGroupForm = {};
-        $scope.answerChoices = rulesService.getAnswerChoices();
 
         $scope.addNewResponse = function() {
           $scope.$broadcast('saveOutcomeDetails');
@@ -364,18 +355,18 @@ oppia.controller('StateRules', [
   $scope.deleteGroup = function(index) {
     var successfullyDeleted = rulesService.deleteGroup(index);
     if (successfullyDeleted) {
-      $rootScope.$broadcast('ruleDeleted');
+      $rootScope.$broadcast('groupDeleted');
     }
   };
 
   $scope.saveActiveGroup = function(updatedRules, updatedOutcome) {
     rulesService.saveActiveGroup(updatedRules, updatedOutcome);
-    $rootScope.$broadcast('ruleSaved');
+    $rootScope.$broadcast('groupSaved');
   };
 
   $scope.saveDefaultOutcome = function(updatedOutcome) {
     rulesService.saveDefaultOutcome(updatedOutcome);
-    $rootScope.$broadcast('ruleSaved');
+    $rootScope.$broadcast('groupSaved');
   };
 
   $scope.doesOutcomeHaveFeedback = function(outcome) {

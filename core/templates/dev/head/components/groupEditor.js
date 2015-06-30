@@ -13,7 +13,7 @@
 // limitations under the License.
 
 /**
- * @fileoverview Directive for the group and outcome editors.
+ * @fileoverview Directive for the group, feedback, and outcome editors.
  *
  * @author bhenning@google.com (Ben Henning)
  */
@@ -24,39 +24,48 @@ oppia.directive('groupEditor', ['$log', function($log) {
     scope: {
       rules: '=',
       outcome: '=',
-      isDefaultRule: '&',
-      saveRule: '&',
-      deleteRule: '&',
+      saveGroup: '&',
       isEditable: '='
     },
     templateUrl: 'inline/group_editor',
     controller: [
       '$scope', 'stateInteractionIdService', 'rulesService',
-      'editorContextService', 'routerService',
+      'editorContextService', 'routerService', 'INTERACTION_SPECS',
       function(
         $scope, stateInteractionIdService, rulesService, editorContextService,
-        routerService) {
+        routerService, INTERACTION_SPECS) {
 
-    $scope.resetMementos = function() {
+    var resetMementos = function() {
       $scope.rulesMemento = null;
       $scope.outcomeFeedbackMemento = null;
       $scope.outcomeDestMemento = null;
     };
-    $scope.resetMementos();
+    resetMementos();
 
     $scope.groupEditorIsOpen = false;
     $scope.activeRuleIndex = -1;
     $scope.editGroupForm = {};
 
+    $scope.getAnswerChoices = function() {
+      return rulesService.getAnswerChoices();
+    };
+    $scope.answerChoices = $scope.getAnswerChoices();
+
+    // Updates answer choices when the interaction requires it -- for example,
+    // the rules for multiple choice need to refer to the multiple choice
+    // interaction's customization arguments.
+    // TODO(sll): Remove the need for this watcher, or make it less ad hoc.
+    $scope.$on('updateAnswerChoices', function(evt, newAnswerChoices) {
+      rulesService.updateAnswerChoices(newAnswerChoices);
+      $scope.answerChoices = $scope.getAnswerChoices();
+    });
+
+    $scope.getCurrentInteractionId = function() {
+      return stateInteractionIdService.savedMemento;
+    };
+
     $scope.openGroupEditor = function() {
       if ($scope.isEditable) {
-        if (!$scope.isDefaultRule()) {
-          //$scope.ruleTypeMemento = angular.copy($scope.rule.rule_type);
-          //$scope.ruleInputsMemento = angular.copy($scope.rule.inputs);
-        } else {
-          //$scope.ruleTypeMemento = null;
-          //$scope.ruleInputsMemento = null;
-        }
         $scope.rulesMemento = angular.copy($scope.rules);
         $scope.outcomeFeedbackMemento = angular.copy($scope.outcome.feedback);
         $scope.outcomeDestMemento = angular.copy($scope.outcome.dest);
@@ -68,27 +77,19 @@ oppia.directive('groupEditor', ['$log', function($log) {
       }
     };
 
-    $scope.getCurrentInteractionId = function() {
-      return stateInteractionIdService.savedMemento;
-    };
-
     $scope.saveThisGroup = function() {
       $scope.$broadcast('saveOutcomeDetails');
       // TODO(sll): Add more validation prior to saving.
       $scope.groupEditorIsOpen = false;
-      $scope.resetMementos();
-      $scope.saveRule();
+      resetMementos();
+      $scope.saveGroup();
     };
 
     $scope.cancelThisEdit = function() {
-      //if (!$scope.isDefaultRule()) {
-      //  $scope.rule.rule_type = angular.copy($scope.ruleTypeMemento);
-      //  $scope.rule.inputs = angular.copy($scope.ruleInputsMemento);
-      //}
       $scope.rules = angular.copy($scope.rulesMemento);
       $scope.outcome.feedback = angular.copy($scope.outcomeFeedbackMemento);
       $scope.outcome.dest = angular.copy($scope.outcomeDestMemento);
-      $scope.resetMementos();
+      resetMementos();
       $scope.changeActiveRuleIndex(-1);
 
       // Last step is to actually close the editor (to avoid other functions,
@@ -102,16 +103,114 @@ oppia.directive('groupEditor', ['$log', function($log) {
       }
     });
 
+    var getDefaultInputValue = function(varType) {
+      // TODO(bhenning): Typed objects should be required to provide a default
+      // value specific to their type.
+      switch (varType) {
+        default:
+        case 'Null':
+          return null;
+        case 'Boolean':
+          return false;
+        case 'Real':
+        case 'Int':
+        case 'NonnegativeInt':
+          return 0;
+        case 'UnicodeString':
+        case 'NormalizedString':
+        case 'MathLatexString':
+        case 'Html':
+        case 'SanitizedUrl':
+        case 'Filepath':
+        case 'LogicErrorCategory':
+          return '';
+        case 'CodeEvaluation':
+          return {
+            'code': getDefaultInputValue('UnicodeString'),
+            'output': getDefaultInputValue('UnicodeString'),
+            'evaluation': getDefaultInputValue('UnicodeString'),
+            'error': getDefaultInputValue('UnicodeString')
+          };
+        case 'CoordTwoDim':
+          return [getDefaultInputValue('Real'), getDefaultInputValue('Real')];
+        case 'ListOfUnicodeString':
+        case 'SetOfUnicodeString':
+        case 'MusicPhrase':
+          return [];
+        case 'CheckedProof':
+          return {
+            'assumptions_string': getDefaultInputValue('UnicodeString'),
+            'target_string': getDefaultInputValue('UnicodeString'),
+            'proof_string': getDefaultInputValue('UnicodeString'),
+            'correct': getDefaultInputValue('Boolean')
+          };
+        case 'LogicQuestion':
+          return {
+            'top_kind_name': getDefaultInputValue('UnicodeString'),
+            'top_operator_name': getDefaultInputValue('UnicodeString'),
+            'arguments': [],
+            'dummies': []
+          };
+        case 'Graph':
+          return {
+            'vertices': [],
+            'edges': [],
+            'isLabeled': getDefaultInputValue('Boolean'),
+            'isDirected': getDefaultInputValue('Boolean'),
+            'isWeighted': getDefaultInputValue('Boolean')
+          };
+        case 'NormalizedRectangle2D':
+          return [
+            [getDefaultInputValue('Real'), getDefaultInputValue('Real')],
+            [getDefaultInputValue('Real'), getDefaultInputValue('Real')]];
+        case 'ImageRegion':
+          return {
+            'regionType': getDefaultInputValue('UnicodeString'),
+            'area': getDefaultInputValue('NormalizedRectangle2D')
+          };
+        case 'ImageWithRegions':
+          return {
+            'imagePath': getDefaultInputValue('Filepath'),
+            'labeledRegions': []
+          };
+        case 'ClickOnImage':
+          return {
+            'clickPosition': [
+              getDefaultInputValue('Real'), getDefaultInputValue('Real')],
+            'clickedRegions': []
+          };
+      }
+    };
+
     $scope.addNewRule = function() {
       if (!$scope.groupEditorIsOpen) {
         $scope.openGroupEditor();
       }
 
+      // Build an initial blank set of inputs for the initial rule.
+      var interactionId = $scope.getCurrentInteractionId();
+      var ruleDescriptions = INTERACTION_SPECS[interactionId].rule_descriptions;
+      var ruleType = Object.keys(ruleDescriptions)[0];
+      var description = ruleDescriptions[ruleType];
+
+      var PATTERN = /\{\{\s*(\w+)\s*(\|\s*\w+\s*)?\}\}/;
+      var inputs = {};
+      while (description.match(PATTERN)) {
+        var varName = description.match(PATTERN)[1];
+        var varType = description.match(PATTERN)[2];
+        if (varType) {
+          varType = varType.substring(1);
+        }
+
+        inputs[varName] = getDefaultInputValue(varType);
+        description = description.replace(PATTERN, ' ');
+      }
+
       // TODO(bhenning): Should use functionality in ruleEditor.js, but move it
       // to rulesService in StateRules.js to properly form a new rule.
       $scope.rules.push({
-        'rule_type': 'Equals',
-        'inputs': {},
+        'rule_type': ruleType,
+        'inputs': inputs,
       });
       $scope.changeActiveRuleIndex($scope.rules.length - 1);
     };
@@ -180,6 +279,14 @@ oppia.directive('groupEditor', ['$log', function($log) {
         $scope.changeActiveRuleIndex(ui.item.index());
       }
     };
+
+    $scope.$on('onInteractionIdChanged', function(evt, newInteractionId) {
+      if ($scope.groupEditorIsOpen) {
+        $scope.saveThisGroup();
+      }
+      $scope.$broadcast('updateAnswerGroupInteractionId');
+      $scope.answerChoices = $scope.getAnswerChoices();
+    });
   }]};
 }]);
 

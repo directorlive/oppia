@@ -1,50 +1,6 @@
-<rule-details-editor rule="rule" is-default-rule="isDefaultRule()">
-</rule-details-editor>
-
-<script type="text/ng-template" id="rules/ruleDetailsEditor">
-  <div style="position: relative;">
-    <span ng-if="!isDefaultRule()">
-      <rule-description-editor current-rule="rule" is-default-rule="isDefaultRule()">
-      </rule-description-editor>
-    </span>
-
-    <span ng-if="isDefaultRule()">
-      <span ng-if="currentInteractionId === 'Continue'">
-        is clicked...
-      </span>
-      <span ng-if="currentInteractionId !== 'Continue'">
-        is anything else...
-      </span>
-    </span>
-  </div>
-</script>
-
-<script type="text/ng-template" id="modals/addState">
-  <div class="modal-header">
-    <h3>Add New Card</h3>
-  </div>
-
-  <div class="modal-body">
-    <form role="form" class="form-inline" ng-submit="submit(newStateName)">
-      <div class="form-group">
-        <input type="text" class="form-control protractor-test-add-state-input" ng-model="newStateName" placeholder="New State Name" focus-on="newStateNameInput">
-      </div>
-    </form>
-  </div>
-
-  <div class="modal-footer">
-    <button class="btn btn-default" ng-click="cancel()">Cancel</button>
-    <button class="btn btn-success protractor-test-add-state-submit"
-            ng-click="submit(newStateName)"
-            ng-disabled="!isNewStateNameValid(newStateName)">
-      Add Card
-    </button>
-  </div>
-</script>
-
-<script type="text/ng-template" id="rules/ruleDescriptionEditor">
+<div style="position: relative;">
   <form class="form-inline" role="form">
-    <rule-type-selector class="protractor-test-rule-description" local-value="currentRule.rule_type" on-selection-change="onSelectNewRuleType">
+    <rule-type-selector class="protractor-test-rule-description" local-value="rule.rule_type" on-selection-change="onSelectNewRuleType">
     </rule-type-selector>
 
     <span ng-repeat="item in ruleDescriptionFragments track by $index" class="form-group protractor-test-rule-description-fragment" style="margin-right: 5px; width: 100%;">
@@ -53,17 +9,17 @@
           "<[ruleDescriptionChoices[0].val|convertToPlainText|truncate]>"
         </span>
         <span ng-if="ruleDescriptionChoices.length !== 1">
-          <select class="form-control" ng-model="currentRule.inputs[item.varName]" ng-options="choice.id as (choice.val|convertToPlainText|truncate) for choice in ruleDescriptionChoices" style="max-width: 250px;">
+          <select class="form-control" ng-model="rule.inputs[item.varName]" ng-options="choice.id as (choice.val|convertToPlainText|truncate) for choice in ruleDescriptionChoices" style="max-width: 250px;">
           </select>
         </span>
       </span>
 
       <span ng-if="item.type != 'select' && item.type != 'noneditable'">
-        <object-editor obj-type="<[item.type]>" is-editable="isEditable" always-editable="true" value="currentRule.inputs[item.varName]" style="color: black;"></object-editor>
+        <object-editor obj-type="<[item.type]>" is-editable="isEditable" always-editable="true" value="rule.inputs[item.varName]" style="color: black;"></object-editor>
       </span>
       <span ng-if="item.type == 'noneditable'">
         <[item.text]>
       </span>
     </span>
   </form>
-</script>
+</div>

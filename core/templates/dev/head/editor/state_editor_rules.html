@@ -34,7 +34,7 @@
             <div ng-if="activeGroupIndex === $index">
               <div class="oppia-editor-card-section">
                 <div class="oppia-rule-body-container">
-                  <group-editor rules="group.rule_specs" outcome="group.outcome" is-default-rule="false" save-rule="saveActiveGroup(group.rule_specs, group.outcome)" is-editable="editabilityService.isEditable()" class="protractor-test-rule-body">
+                  <group-editor rules="group.rule_specs" outcome="group.outcome" save-group="saveActiveGroup(group.rule_specs, group.outcome)" is-editable="editabilityService.isEditable()" class="protractor-test-rule-body">
                   </group-editor>
                 </div>
               </div>
@@ -66,7 +66,7 @@
             <div ng-if="activeGroupIndex === answerGroups.length">
               <div class="oppia-editor-card-section">
                 <div class="oppia-rule-body-container">
-                  <group-editor rule="null" outcome="defaultOutcome" is-default-rule="true" save-rule="saveDefaultOutcome(defaultOutcome)" is-editable="editabilityService.isEditable()" class="protractor-test-rule-body">
+                  <group-editor rule="null" outcome="defaultOutcome" save-group="saveDefaultOutcome(defaultOutcome)" is-editable="editabilityService.isEditable()" class="protractor-test-rule-body">
                   </group-editor>
                 </div>
               </div>
@@ -99,8 +99,8 @@
         <strong>When the button</strong>
       </div>
 
-      <rule-details-editor rule="tmpRule" is-default-rule="false">
-      </rule-details-editor>
+      <rule-editor rule="tmpRule" is-editable="editabilityService.isEditable()">
+      </rule-editor>
 
       <br>
 
