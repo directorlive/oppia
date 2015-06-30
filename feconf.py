@@ -72,12 +72,9 @@ COMMIT_LIST_PAGE_SIZE = 50
 FEEDBACK_TAB_PAGE_SIZE = 20
 
 # Default name for the initial state of an exploration.
-DEFAULT_INIT_STATE_NAME = 'First State'
+DEFAULT_INIT_STATE_NAME = 'First Card'
 # The default content text for the initial state of an exploration.
 DEFAULT_INIT_STATE_CONTENT_STR = ''
-
-# Name (and description) of the default rule.
-DEFAULT_RULE_NAME = 'Default'
 
 # The threshold the truth value of an evaluated answer group must equal or
 # exceed in order to be considered a better classification than the default

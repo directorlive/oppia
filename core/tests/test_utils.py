@@ -183,8 +183,7 @@ class TestBase(unittest.TestCase):
         return self._parse_json_response(json_response, expect_errors=False)
 
     def post_json(self, url, payload, csrf_token=None, expect_errors=False,
-                  expected_status_int=200, upload_files=None,
-                  expect_response=True):
+                  expected_status_int=200, upload_files=None):
         """Post an object to the server by JSON; return the received object."""
         data = {'payload': json.dumps(payload)}
         if csrf_token:
@@ -195,11 +194,8 @@ class TestBase(unittest.TestCase):
             upload_files=upload_files)
 
         self.assertEqual(json_response.status_int, expected_status_int)
-        if expect_response:
-            return self._parse_json_response(
-                json_response, expect_errors=expect_errors)
-        else:
-            return None
+        return self._parse_json_response(
+            json_response, expect_errors=expect_errors)
 
     def put_json(self, url, payload, csrf_token=None, expect_errors=False,
                  expected_status_int=200):
@@ -305,8 +301,10 @@ class TestBase(unittest.TestCase):
         # If an end state name is provided, add terminal node with that name
         if end_state_name is not None:
             exploration.add_states([end_state_name])
-            exploration.states[end_state_name].update_interaction_id(
-                'EndExploration')
+            end_state = exploration.states[end_state_name]
+            end_state.update_interaction_id('EndExploration')
+            end_state.interaction.default_outcome = None
+
             # Link first state to ending state (to maintain validity)
             init_state = exploration.states[exploration.init_state_name]
             init_interaction = init_state.interaction
@@ -339,7 +337,11 @@ class TestBase(unittest.TestCase):
         """Submits an answer as an exploration player and returns the
         corresponding dict. This function has strong parallels to code in
         PlayerServices.js which has the non-test code to perform the same
-        functionality.
+        functionality. This is replicated here so backend tests may utilize the
+        functionality of PlayerServices.js without being able to access it.
+
+        TODO(bhenning): Replicate this in an integration test to protect against
+        code skew here.
         """
         if params is None:
             params = {}
@@ -363,7 +365,7 @@ class TestBase(unittest.TestCase):
                 'version': exploration.version,
                 'old_state_name': state_name,
                 'rule_spec_string': classify_result['rule_spec_string']
-            }, expect_response=False
+            }
         )
 
         # Now the next state's data must be calculated.

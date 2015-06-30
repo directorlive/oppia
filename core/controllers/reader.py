@@ -94,9 +94,11 @@ def require_playable(handler):
 # rule specs over multiple answer groups and making sure the best match over all
 # those rules is picked.
 def classify(exp_id, state, answer, params):
-    """Normalize the answer and classify it among the answer groups of the given
-    state. Returns a dict with the following keys:
-        'outcome': The AnswerOutcome of the answer group matched.
+    """Normalize the answer and select among the answer groups the group in
+    which the answer best belongs. The best group is decided by finding the
+    first rule best satisfied by the answer. Returns a dict with the following
+    keys:
+        'outcome': A dict representing the outcome of the answer group matched.
         'rule_spec_string': A descriptive string representation of the rule
             matched.
     When the default rule is matched, outcome is the default_outcome of the
@@ -116,7 +118,7 @@ def classify(exp_id, state, answer, params):
     for answer_group in state.interaction.answer_groups:
         fs = fs_domain.AbstractFileSystem(
             fs_domain.ExplorationFileSystem(exp_id))
-        input_type = interaction_instance.get_submit_handler().obj_type
+        input_type = interaction_instance.answer_type
         ored_truth_value = 0.0
         best_rule_spec = None
         for rule_spec in answer_group.rule_specs:
@@ -147,7 +149,9 @@ def classify(exp_id, state, answer, params):
             'rule_spec_string': exp_domain.DEFAULT_RULESPEC_STR
         }
 
-    raise Exception('No matching rule found for submit handler.')
+    raise Exception('Something has seriously gone wrong with the exploration. '
+        'Oppia does not know what to do with this answer. Please contact the '
+        'exploration owner.')
 
 
 class ExplorationPage(base.BaseHandler):
@@ -315,6 +319,7 @@ class AnswerSubmittedEventHandler(base.BaseHandler):
             exploration_id, version, old_state_name, rule_spec_string,
             old_interaction_instance.get_stats_log_html(
                 old_interaction.customization_args, normalized_answer))
+        self.render_json({})
 
 
 class StateHitEventHandler(base.BaseHandler):
@@ -345,9 +350,9 @@ class ClassifyHandler(base.BaseHandler):
     """Stateless handler that performs a classify() operation server-side and
     returns the corresponding classification result, which is a dict containing
     two keys:
-        answer_group: The group which was the best found for classification.
-        rule_spec: The specific rule within the answer group that was the best
-                   match within the group.
+        'outcome': A dict representing the outcome of the answer group matched.
+        'rule_spec_string': A descriptive string representation of the rule
+            matched.
     """
 
     REQUIRE_PAYLOAD_CSRF_CHECK = False

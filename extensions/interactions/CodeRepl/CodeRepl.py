@@ -24,7 +24,7 @@ class CodeRepl(base.BaseInteraction):
     description = 'Allows learners to enter code and get it evaluated.'
     display_mode = base.DISPLAY_MODE_SUPPLEMENTAL
     _dependency_ids = ['jsrepl', 'codemirror']
-    _submit_handler = base.SubmitAnswerHandler('CodeEvaluation')
+    answer_type = 'CodeEvaluation'
 
     # Language options 'lua' and 'scheme' have been removed for possible
     # later re-release.

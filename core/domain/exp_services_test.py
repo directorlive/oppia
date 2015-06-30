@@ -285,7 +285,7 @@ class ExplorationCreateAndDeleteUnitTests(ExplorationServicesUnitTests):
         exploration = self.save_new_valid_exploration(
             self.EXP_ID, self.OWNER_ID)
         exploration.param_specs = {
-            'theParameter': param_domain.ParamSpec('Int')}
+            'theParameter': param_domain.ParamSpec('UnicodeString')}
         exp_services._save_exploration(self.OWNER_ID, exploration, '', [])
 
         retrieved_exploration = exp_services.get_exploration_by_id(self.EXP_ID)
@@ -300,7 +300,7 @@ class ExplorationCreateAndDeleteUnitTests(ExplorationServicesUnitTests):
         exploration = self.save_new_valid_exploration(
             self.EXP_ID, self.OWNER_ID)
         exploration.param_specs = {
-            'theParameter': param_domain.ParamSpec('Int')}
+            'theParameter': param_domain.ParamSpec('UnicodeString')}
         exp_services._save_exploration(self.OWNER_ID, exploration, '', [])
 
         # change title and category
@@ -704,7 +704,7 @@ class UpdateStateTests(ExplorationServicesUnitTests):
         # List of answer groups to add into an interaction.
         self.interaction_answer_groups = [{
             'rule_specs': [{
-                'name': 'Equals',
+                'rule_type': 'Equals',
                 'inputs': {'x': 0},
             }],
             'outcome': {
@@ -715,10 +715,10 @@ class UpdateStateTests(ExplorationServicesUnitTests):
         }]
         # Default outcome specification for an interaction.
         self.interaction_default_outcome = {
-                'dest': self.init_state_name,
-                'feedback': ['Incorrect', '<b>Wrong answer</b>'],
-                'param_changes': []
-            }
+            'dest': self.init_state_name,
+            'feedback': ['Incorrect', '<b>Wrong answer</b>'],
+            'param_changes': []
+        }
 
     def test_update_state_name(self):
         """Test updating of state name."""
@@ -749,7 +749,8 @@ class UpdateStateTests(ExplorationServicesUnitTests):
     def test_update_param_changes(self):
         """Test updating of param_changes."""
         exploration = exp_services.get_exploration_by_id(self.EXP_ID)
-        exploration.param_specs = {'myParam': param_domain.ParamSpec('Int')}
+        exploration.param_specs = {
+            'myParam': param_domain.ParamSpec('UnicodeString')}
         exp_services._save_exploration(self.OWNER_ID, exploration, '', [])
         exp_services.update_exploration(
             self.OWNER_ID, self.EXP_ID, _get_change_list(
@@ -776,7 +777,8 @@ class UpdateStateTests(ExplorationServicesUnitTests):
     def test_update_invalid_generator(self):
         """Test for check that the generator_id in param_changes exists."""
         exploration = exp_services.get_exploration_by_id(self.EXP_ID)
-        exploration.param_specs = {'myParam': param_domain.ParamSpec('Int')}
+        exploration.param_specs = {
+            'myParam': param_domain.ParamSpec('UnicodeString')}
         exp_services._save_exploration(self.OWNER_ID, exploration, '', [])
 
         self.param_changes[0]['generator_id'] = 'fake'
@@ -871,14 +873,14 @@ class UpdateStateTests(ExplorationServicesUnitTests):
         init_interaction = init_state.interaction
         rule_specs = init_interaction.answer_groups[0].rule_specs
         outcome = init_interaction.answer_groups[0].outcome
-        self.assertEqual(rule_specs[0].name, 'Equals')
+        self.assertEqual(rule_specs[0].rule_type, 'Equals')
         self.assertEqual(rule_specs[0].inputs, {'x': 0})
         self.assertEqual(outcome.feedback, ['Try again'])
         self.assertEqual(outcome.dest, self.init_state_name)
         self.assertEqual(init_interaction.default_outcome.dest, 'State 2')
 
     def test_update_state_invalid_state(self):
-        """Test that rule destination states cannot be non-existant."""
+        """Test that rule destination states cannot be non-existent."""
         self.interaction_answer_groups[0]['outcome']['dest'] = 'INVALID'
         with self.assertRaisesRegexp(
                 utils.ValidationError,
@@ -919,12 +921,6 @@ class UpdateStateTests(ExplorationServicesUnitTests):
                     exp_domain.STATE_PROPERTY_INTERACTION_DEFAULT_OUTCOME,
                     self.interaction_default_outcome),
                 '')
-
-    def test_update_state_extra_keys(self):
-        """Test that extra keys in rule specs are detected."""
-        answer_group = self.interaction_answer_groups[0]
-        answer_group['rule_specs'][0]['inputs']['blah'] = 'unimportant'
-        pass
 
     def test_update_state_variable_types(self):
         """Test that parameters in rules must have the correct type."""
