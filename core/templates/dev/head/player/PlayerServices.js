@@ -103,7 +103,17 @@ oppia.factory('answerClassificationService', [
           answer: answer
         });
       }
-    }
+    },
+    getMatchingBatchClassificationResult: function(
+        explorationId, oldState, answers) {
+      if (!_USE_CLIENT_SIDE_CLASSIFICATION) {
+        var classifyUrl = '/explorehandler/batch_classify/' + explorationId;
+        return $http.post(classifyUrl, {
+          old_state: oldState,
+          answers: answers
+        });
+      }
+    },
   };
 }]);
 

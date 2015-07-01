@@ -371,6 +371,28 @@ class ClassifyHandler(base.BaseHandler):
         self.render_json(classify(exploration_id, old_state, answer, params))
 
 
+class BatchClassifyHandler(base.BaseHandler):
+    """Classification handler which classifies similarly to ClassifyHandler, but
+    across a list of answers rather than a single answer. The classificaiton
+    results for each answer is returned in a list in the same order as the
+    original answers.
+    """
+
+    REQUIRE_PAYLOAD_CSRF_CHECK = False
+
+    def post(self, exploration_id):
+        """Handles POST requests."""
+        old_state = exp_domain.State.from_dict(self.payload.get('old_state'))
+        answers = self.payload.get('answers')
+        # TODO(bhening): Determine whether we need params for these evaluations.
+        params = []
+
+        results = []
+        for answer in answers:
+            results.append(classify(exploration_id, old_state, answer, params))
+        self.render_json(results)
+
+
 class ReaderFeedbackHandler(base.BaseHandler):
     """Submits feedback from the reader."""
 

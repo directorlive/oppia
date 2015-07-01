@@ -246,9 +246,12 @@ class RuleSpec(object):
 
     def stringify_classified_rule(self):
         """Returns a string representation of a rule (for the stats log)."""
-        param_list = [utils.to_ascii(val) for
-                      (key, val) in self.inputs.iteritems()]
-        return '%s(%s)' % (self.rule_type, ','.join(param_list))
+        if self.rule_type == 'FuzzyMatches':
+            return self.rule_type
+        else:
+            param_list = [utils.to_ascii(val) for
+                         (key, val) in self.inputs.iteritems()]
+            return '%s(%s)' % (self.rule_type, ','.join(param_list))
 
     def validate(self, rule_params_list, exp_param_specs_dict):
         """Validates a RuleSpec value object. It ensures the inputs dict does

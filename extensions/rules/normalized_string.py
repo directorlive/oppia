@@ -75,3 +75,14 @@ class FuzzyEquals(base.NormalizedStringRule):
                 thisrow[j] = min(delcost, addcost, subcost)
 
         return self._fuzzify_truth_value(thisrow[len(self.x) - 1] == 1)
+
+
+class FuzzyMatches(base.NormalizedStringRule):
+    description = 'fuzzy matching {{training_data|SetOfUnicodeString}}'
+
+    def _evaluate(self, subject):
+        lowercase_subject = subject.lower()
+        for possibility in self.training_data:
+            if possibility.lower() == lowercase_subject:
+                return self._fuzzify_truth_value(True)
+        return self._fuzzify_truth_value(False)

@@ -36,6 +36,9 @@ oppia.directive('ruleTypeSelector', [function() {
       var ruleTypesToDescriptions = INTERACTION_SPECS[
         stateInteractionIdService.savedMemento].rule_descriptions;
       for (var ruleType in ruleTypesToDescriptions) {
+        if (ruleType == 'FuzzyMatches') {
+          continue;
+        }
         numberOfRuleTypes++;
         choices.push({
           id: ruleType,

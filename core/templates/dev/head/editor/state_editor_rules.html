@@ -81,6 +81,9 @@
       <button type="button" class="btn btn-default btn-lg oppia-add-response-button protractor-test-open-add-response-modal" ng-click="openAddRuleModal()">
         + Give New Feedback
       </button>
+      <button type="button" class="btn btn-default btn-lg oppia-add-response-button protractor-test-open-add-teach-oppia-modal" ng-click="openTeachOppiaModal()">
+        Teach Oppia
+      </button>
     </div>
   </md-card>
 </div>
@@ -117,5 +120,50 @@
   <div class="modal-footer">
     <button class="btn btn-default" ng-click="cancel()">Cancel</button>
     <button class="btn btn-success protractor-test-add-new-rule" ng-click="addNewResponse()" ng-disabled="addGroupForm.outcomeDetailsForm.$invalid || isSelfLoopWithNoFeedback(tmpOutcome)">Save Response</button>
+  </div>
+</script>
+
+<script type="text/ng-template" id="modals/teachOppia">
+  <div class="modal-header">
+    <h3>Teach Oppia</h3>
+  </div>
+
+  <div class="modal-body">
+    <form name="teachOppiaFor" class="form-inline">
+      <div class="oppia-rule-details-header">
+        <button type="button" class="btn btn-default btn-xs" ng-click="nothing()">
+          <span class="glyphicon glyphicon-chevron-left" title="Previous answer">
+          </span>
+        </button>
+        <span>
+          <strong>
+            Test Header
+          </strong>
+        </span>
+        <button type="button" class="btn btn-default btn-xs" ng-click="nothing()">
+          <span class="glyphicon glyphicon-chevron-right" title="Next answer">
+          </span>
+        </button>
+
+        <div>
+          <strong ng-if="trainingData.length > 0">
+            Oppia does not know what to do with:
+          </strong>
+          <strong ng-if="trainingData.length == 0">
+            Oppia understands all the answers submitted for this question.
+          </strong>
+          <ul ng-if="trainingData.length > 0">
+            <li ng-repeat="answer in trainingData"><[answer]></ul>
+          </ul>
+        </div>
+      <div>
+    </form>
+
+    <button class="btn btn-default" ng-click="nothing()">Test Oppia</button>
+    <button class="btn btn-default" ng-click="nothing()">See What Oppia Knows</button>
+  </div>
+
+  <div class="modal-footer">
+    <button class="btn btn-success" ng-click="finishTraining()">Done</button>
   </div>
 </script>

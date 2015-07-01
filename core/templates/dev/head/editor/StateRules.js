@@ -332,6 +332,63 @@ oppia.controller('StateRules', [
     });
   };
 
+  $scope.openTeachOppiaModal = function() {
+    $modal.open({
+      templateUrl: 'modals/teachOppia',
+      backdrop: true,
+      controller: ['$scope', '$modalInstance', 'trainingDataService',
+        'explorationStatesService', 'editorContextService',
+        'answerClassificationService',
+        function($scope, $modalInstance, trainingDataService,
+            explorationStatesService, editorContextService,
+            answerClassificationService) {
+          $scope.trainingData = [];
+
+          $scope.finishTraining = function() {
+            $modalInstance.close({
+            });
+          };
+
+          // TODO(bhenning): This should be provided by a service.
+          var explorationId = '';
+          var pathnameArray = window.location.pathname.split('/');
+          for (var i = 0; i < pathnameArray.length; i++) {
+            if (pathnameArray[i] === 'create') {
+              var explorationId = pathnameArray[i + 1];
+              break;
+            }
+          }
+
+          var currentStateName = editorContextService.getActiveStateName();
+          var state = explorationStatesService.getState(currentStateName);
+
+          var trainingDataResult = trainingDataService.getTrainingDataResult(
+            explorationId, currentStateName, state);
+
+          trainingDataResult.success(function(result) {
+            var unhandledAnswers = result['unhandled_answers'];
+
+            answerClassificationService.getMatchingBatchClassificationResult(
+              explorationId, state, unhandledAnswers).success(
+                  function(classification_results) {
+                for (var i = 0; i < classification_results.length; i++) {
+                  var classification_result = classification_results[i];
+                  var feedback = 'No feedback';
+                  if (classification_result.outcome.feedback.length > 0) {
+                    feedback = classification_result.outcome.feedback[0];
+                    feedback = '\'' + feedback + '\'';
+                  }
+                  $scope.trainingData.push('Answer: \'' + unhandledAnswers[i] +
+                    '\', feedback: ' + feedback);
+                }
+              });
+          });
+        }]
+    }).result.then(function(result) {
+      console.log('Finished teaching Oppia');
+    });
+  };
+
   $scope.ANSWER_GROUP_LIST_SORTABLE_OPTIONS = {
     axis: 'y',
     cursor: 'move',
@@ -376,5 +433,21 @@ oppia.controller('StateRules', [
 
   $scope.navigateToState = function(stateName) {
     routerService.navigateToMainTab(stateName);
+  };
+}]);
+
+// A service that, given an exploration ID and state name, determines all of the
+// answers which do not have certain classification and are not currently used
+// as part of an fuzzy rule training models.
+oppia.factory('trainingDataService', [
+    '$http', function($http) {
+
+  return {
+    // Returns a promise with the corresponding training data.
+    getTrainingDataResult: function(explorationId, stateName, state) {
+      var trainingDataUrl = '/createhandler/training_data/' + explorationId +
+        '/' + encodeURIComponent(stateName);
+      return $http.post(trainingDataUrl, {state: state});
+    }
   };
 }]);
