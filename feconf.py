@@ -371,6 +371,9 @@ CATEGORIES_TO_COLORS = {
     'Welcome': COLOR_TEAL,
 }
 
+# A sorted list of default categories.
+DEFAULT_CATEGORIES = sorted(CATEGORIES_TO_COLORS.keys())
+
 # List of supported language codes. Each description has a
 # parenthetical part that may be stripped out to give a shorter
 # description.
@@ -451,3 +454,7 @@ ALL_LANGUAGE_CODES = [{
 }, {
     'code': 'vi', 'description': u'Tiếng Việt (Vietnamese)',
 }]
+
+# Defaults for topic similarities
+DEFAULT_TOPIC_SIMILARITY = 0.5
+SAME_TOPIC_SIMILARITY = 1.0
