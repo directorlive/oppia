@@ -146,15 +146,14 @@
         </button>
 
         <div>
-          <strong ng-if="trainingData.length > 0">
-            Oppia does not know what to do with:
-          </strong>
           <strong ng-if="trainingData.length == 0">
             Oppia understands all the answers submitted for this question.
           </strong>
-          <ul ng-if="trainingData.length > 0">
-            <li ng-repeat="answer in trainingData"><[answer]></ul>
-          </ul>
+
+          <br>
+
+          <training-panel ng-if="trainingData.length > 0" answer="trainingData[0].answer" answer-feedback="trainingData[0].feedback" classification="classification" all-feedback="allFeedback" select-feedback="selectCurrentFeedback()">
+          </training-panel>
         </div>
       <div>
     </form>
@@ -165,5 +164,43 @@
 
   <div class="modal-footer">
     <button class="btn btn-success" ng-click="finishTraining()">Done</button>
+  </div>
+</script>
+
+<script type="text/ng-template" id="teaching/trainingPanel">
+  <div class="form-inline" style="margin-bottom: 10px;">
+    <div>
+      <span><strong>If Oppia encounters the answer:</strong></span>
+    </div>
+
+    <div>
+      <span><[answer]></span>
+    </div>
+
+    <div>
+      <span><strong>it will reply with:</strong></span>
+    </div>
+
+    <div>
+      <span><[answerFeedback]></span>
+    </div>
+
+    <br>
+
+    <div>
+      <span><strong>Is this right?</strong></span>
+    </div>
+
+    <br>
+
+    <button class="btn btn-default" ng-disabled="changingFeedbackIndex" ng-click="beginChangingFeedbackIndex()">No</button>
+    <button class="btn btn-default" ng-disabled="changingFeedbackIndex" ng-click="confirmFeedbackIndex(classification.feedbackIndex)">Yes</button>
+
+    <br>
+
+    <div ng-if="changingFeedbackIndex">
+      <span><strong>Select correct feedback:</strong></span>
+      <button ng-repeat="feedback in allFeedback track by $index" class="btn btn-default" ng-click="confirmFeedbackIndex($index)"><[feedback]></button>
+    </div>
   </div>
 </script>

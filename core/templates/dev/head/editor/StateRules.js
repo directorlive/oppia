@@ -343,6 +343,28 @@ oppia.controller('StateRules', [
             explorationStatesService, editorContextService,
             answerClassificationService) {
           $scope.trainingData = [];
+          $scope.allFeedback = [];
+          $scope.classification = {feedbackIndex: 0};
+
+          $scope.selectCurrentFeedback = function() {
+            console.log('Selecting feedback: ' +
+              $scope.allFeedback[$scope.classification.feedbackIndex]);
+          };
+
+          var setFeedbackIndexForTrainingData = function(trainingDataIndex) {
+            var index = -1;
+            var trainingData = $scope.trainingData[trainingDataIndex];
+            var trainedFeedback = trainingData.feedback;
+            for (var i = 0; i < $scope.allFeedback.length; i++) {
+              if ($scope.allFeedback[i] == trainedFeedback) {
+                index = i;
+                break;
+              }
+            }
+            if (index != -1) {
+              $scope.classification.feedbackIndex = index;
+            }
+          };
 
           $scope.finishTraining = function() {
             $modalInstance.close({
@@ -362,6 +384,9 @@ oppia.controller('StateRules', [
           var currentStateName = editorContextService.getActiveStateName();
           var state = explorationStatesService.getState(currentStateName);
 
+          $scope.allFeedback = trainingDataService.getAllPotentialFeedback(
+            state);
+
           var trainingDataResult = trainingDataService.getTrainingDataResult(
             explorationId, currentStateName, state);
 
@@ -373,14 +398,17 @@ oppia.controller('StateRules', [
                   function(classification_results) {
                 for (var i = 0; i < classification_results.length; i++) {
                   var classification_result = classification_results[i];
-                  var feedback = 'No feedback';
+                  var feedback = 'Nothing';
                   if (classification_result.outcome.feedback.length > 0) {
                     feedback = classification_result.outcome.feedback[0];
-                    feedback = '\'' + feedback + '\'';
                   }
-                  $scope.trainingData.push('Answer: \'' + unhandledAnswers[i] +
-                    '\', feedback: ' + feedback);
+                  $scope.trainingData.push({
+                    answer: unhandledAnswers[i],
+                    feedback: feedback
+                  });
                 }
+
+                setFeedbackIndexForTrainingData(0);
               });
           });
         }]
@@ -448,6 +476,53 @@ oppia.factory('trainingDataService', [
       var trainingDataUrl = '/createhandler/training_data/' + explorationId +
         '/' + encodeURIComponent(stateName);
       return $http.post(trainingDataUrl, {state: state});
+    },
+
+    getAllPotentialFeedback: function(state) {
+      var feedback = [];
+      var interaction = state.interaction;
+
+      for (var i = 0; i < interaction.answer_groups.length; i++) {
+        var outcome = interaction.answer_groups[i].outcome;
+        feedback.push((outcome.feedback.length > 0) ? outcome.feedback[0] : '');
+      }
+
+      if (interaction.default_outcome) {
+        var outcome = interaction.default_outcome;
+        feedback.push((outcome.feedback.length > 0) ? outcome.feedback[0] : '');
+      } else {
+        feedback.push('');
+      }
+
+      return feedback;
     }
+  };
+}]);
+
+oppia.directive('trainingPanel', ['$log', function($log) {
+  return {
+    restrict: 'E',
+    scope: {
+      answer: '=',
+      answerFeedback: '=',
+      classification: '=',
+      allFeedback: '=',
+      selectFeedback: '&',
+    },
+    templateUrl: 'teaching/trainingPanel',
+    controller: [
+      '$scope', function($scope) {
+        $scope.changingFeedbackIndex = false;
+
+        $scope.beginChangingFeedbackIndex = function() {
+          $scope.changingFeedbackIndex = true;
+        };
+
+        $scope.confirmFeedbackIndex = function(index) {
+          $scope.classification.feedbackIndex = index;
+          $scope.selectFeedback();
+        };
+      }
+    ]
   };
 }]);
